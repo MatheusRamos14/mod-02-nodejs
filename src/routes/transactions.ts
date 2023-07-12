@@ -3,33 +3,59 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { knex } from '../database';
+import { getUserSession } from '../middlewares/get-user-session';
 
 export async function transactionsRouter(app: FastifyInstance) {
-  app.get('/', async () => {
-    const transactions = await knex('transactions').select();
+  app.get(
+    '/',
+    {
+      preHandler: [getUserSession],
+    },
+    async (request) => {
+      const { sessionId } = request.cookies;
 
-    return { transactions };
-  });
+      const transactions = await knex('transactions')
+        .where('session_id', sessionId)
+        .select();
 
-  app.get('/:id', async (request) => {
-    const getByIDBodySchema = z.object({
-      id: z.string().uuid(),
-    });
+      return { transactions };
+    }
+  );
 
-    const { id } = getByIDBodySchema.parse(request.params);
+  app.get(
+    '/:id',
+    {
+      preHandler: [getUserSession],
+    },
+    async (request) => {
+      const getByIDBodySchema = z.object({
+        id: z.string().uuid(),
+      });
 
-    const transaction = await knex('transactions').where('id', id).first();
+      const { id } = getByIDBodySchema.parse(request.params);
 
-    return { transaction };
-  });
+      const transaction = await knex('transactions').where('id', id).first();
 
-  app.get('/summary', async () => {
-    const summary = await knex('transactions')
-      .sum('amount', { as: 'amount' })
-      .first();
+      return { transaction };
+    }
+  );
 
-    return { summary };
-  });
+  app.get(
+    '/summary',
+    {
+      preHandler: [getUserSession],
+    },
+    async (request) => {
+      const { sessionId } = request.cookies;
+
+      const summary = await knex('transactions')
+        .where('session_id', sessionId)
+        .sum('amount', { as: 'amount' })
+        .first();
+
+      return { summary };
+    }
+  );
 
   app.post('/', async (request, reply) => {
     const postTransactionBodySchema = z.object({
@@ -42,10 +68,22 @@ export async function transactionsRouter(app: FastifyInstance) {
       request.body
     );
 
+    let sessionId = request.cookies.sessionId;
+
+    if (!sessionId) {
+      sessionId = randomUUID();
+
+      reply.cookie('sessionId', sessionId, {
+        path: '/',
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+
     await knex('transactions').insert({
       id: randomUUID(),
       title,
       amount: type === 'credit' ? amount : amount * -1,
+      session_id: sessionId,
     });
 
     return reply.status(201).send();
