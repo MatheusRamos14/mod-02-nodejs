@@ -1,6 +1,6 @@
-import { Knex } from "knex";
+import { Knex } from 'knex';
 
-declare module "knex/types/tables" {
+declare module 'knex/types/tables' {
   interface Transaction {
     id: string;
     session_id?: string;
@@ -13,9 +13,9 @@ declare module "knex/types/tables" {
     // Transactions table
     transactions: Knex.CompositeTableType<
       Transaction,
-      Pick<Transaction, "id" | "title" | "amount"> &
-        Partial<Pick<Transaction, "created_at" | "session_id">>,
-      Partial<Omit<Transaction, "id">>
+      Pick<Transaction, 'id' | 'title' | 'amount'> &
+        Partial<Pick<Transaction, 'created_at' | 'session_id'>>,
+      Partial<Omit<Transaction, 'id'>>
     >;
   }
 }

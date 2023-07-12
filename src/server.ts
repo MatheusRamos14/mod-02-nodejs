@@ -1,12 +1,12 @@
-import fastify from "fastify";
+import fastify from 'fastify';
 
-import { env } from "./env";
-import { transactionsRouter } from "./routes/transactions";
+import { env } from './env';
+import { transactionsRouter } from './routes/transactions';
 
 const app = fastify();
 
 app.register(transactionsRouter, {
-  prefix: "transactions",
+  prefix: 'transactions',
 });
 
 app
