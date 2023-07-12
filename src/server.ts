@@ -1,14 +1,12 @@
-import "dotenv/config";
 import fastify from "fastify";
-import { knex } from "./database";
+
 import { env } from "./env";
+import { transactionsRouter } from "./routes/transactions";
 
 const app = fastify();
 
-app.get("/hello", async () => {
-  const tables = await knex("transactions").select("*");
-
-  return tables;
+app.register(transactionsRouter, {
+  prefix: "transactions",
 });
 
 app

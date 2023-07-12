@@ -12,7 +12,7 @@ const _env = envSchema.safeParse(process.env);
 if (!_env.success) {
   const errors = Object.keys(_env.error.format()).slice(1);
 
-  throw new Error(`Server missing enviroment variables: ${errors}`);
+  throw new Error(`Server missing enviroment variables: ${errors.join(" | ")}`);
 }
 
 export const env = _env.data;
